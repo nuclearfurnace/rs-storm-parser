@@ -1,0 +1,15 @@
+[package]
+name = "StormParser"
+version = "0.1.0"
+authors = ["Toby Lawrence <toby@nuclearfurnace.com>"]
+
+[lib]
+name = "storm_parser"
+path = "src/lib.rs"
+
+[[bin]]
+name = "storm-parser"
+path = "src/bin.rs"
+
+[dependencies]
+mpq = "0.3"
