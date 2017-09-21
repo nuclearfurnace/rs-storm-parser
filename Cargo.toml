@@ -12,4 +12,8 @@ name = "storm-parser"
 path = "src/bin.rs"
 
 [dependencies]
-mpq = "0.3"
+mpq = { path = "../mpq-rust" }
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+byteorder = "1.1.0"
