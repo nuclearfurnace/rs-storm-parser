@@ -5,14 +5,14 @@ use byteorder::{LittleEndian, ReadBytesExt};
 #[derive(Debug, Default)]
 pub struct TrackerEvent {
     pub data_type: i32,
-    pub array: Option<Vec<TrackerEvent>>,
-    pub dictionary: Option<HashMap<i32, TrackerEvent>>,
-    pub blob: Option<Vec<u8>>,
-    pub choice_flag: Option<i32>,
-    pub choice_data: Option<Box<TrackerEvent>>,
-    pub optional_data: Option<Box<TrackerEvent>>,
-    pub unsigned_int: Option<u64>,
-    pub variable_int: Option<i64>,
+    array: Option<Vec<TrackerEvent>>,
+    dictionary: Option<HashMap<i32, TrackerEvent>>,
+    blob: Option<Vec<u8>>,
+    choice_flag: Option<i32>,
+    choice_data: Option<Box<TrackerEvent>>,
+    optional_data: Option<Box<TrackerEvent>>,
+    unsigned_int: Option<u64>,
+    variable_int: Option<i64>,
 }
 
 impl TrackerEvent {
@@ -22,10 +22,9 @@ impl TrackerEvent {
         event.data_type = r.read_u8()? as i32;
         match event.data_type {
             0x00 => {
-                println!("Reading in array object...");
                 let array_len = TrackerEvent::read_variable_int(r)?;
                 let mut array: Vec<TrackerEvent> = Vec::new();
-                for i in 0..array_len {
+                for _ in 0..array_len {
                     let event = TrackerEvent::new(r)?;
                     array.push(event);
                 }
@@ -34,8 +33,6 @@ impl TrackerEvent {
             },
             0x01 => panic!("unsupported tracker event type"),
             0x02 => {
-                println!("Reading in blob object...");
-                // blob, read N bytes, where N is variable int
                 let blob_len = TrackerEvent::read_variable_int(r)?;
                 let mut buf: Vec<u8> = vec![0; blob_len as usize];
                 r.read_exact(&mut buf)?;
@@ -43,24 +40,25 @@ impl TrackerEvent {
                 event.blob = Some(buf);
             },
             0x03 => {
-                println!("Reading in choice object...");
-                // choice, read choice flag as variable int, and choice data
-                // as a tracking event
+                let choice_flag = TrackerEvent::read_variable_int(r)? as i32;
+                let choice_data = TrackerEvent::new(r)?;
+
+                event.choice_flag = Some(choice_flag);
+                event.choice_data = Some(Box::new(choice_data));
             },
             0x04 => {
-                println!("Reading in optional object...");
-                // optional, read byte, and if not 0, read optional data as
-                // a tracking event
+                let should_read = r.read_u8()?;
+                if should_read != 0 {
+                    let optional_data = TrackerEvent::new(r)?;
+                    event.optional_data = Some(Box::new(optional_data));
+                }
             },
             0x05 => {
-                println!("Reading in dictionary object...");
                 // dictionary, read size as variable int, and for N, read key
                 // as variable int and then the value as a tracking event
                 let mut dictionary: HashMap<i32, TrackerEvent> = HashMap::new();
                 let dictionary_len = TrackerEvent::read_variable_int(r)?;
-                println!("Dictionary should have {} entries...", dictionary_len);
-                for i in 0..dictionary_len {
-                    println!("Reading in dictionary entry #{}...", i);
+                for _ in 0..dictionary_len {
                     let key = TrackerEvent::read_variable_int(r)? as i32;
                     let value = TrackerEvent::new(r)?;
 
@@ -70,25 +68,61 @@ impl TrackerEvent {
                 event.dictionary = Some(dictionary);
             },
             0x06 => {
-                println!("Reading in u8 object...");
                 event.unsigned_int = Some(r.read_u8()? as u64);
             },
             0x07 => {
-                println!("Reading in u32 object...");
                 event.unsigned_int = Some(r.read_u32::<LittleEndian>()? as u64);
             },
             0x08 => {
-                println!("Reading in u64 object...");
                 event.unsigned_int = Some(r.read_u64::<LittleEndian>()?);
             },
             0x09 => {
-                println!("Reading in variable integer object...");
                 event.variable_int = Some(TrackerEvent::read_variable_int(r)?);
             },
             _ => panic!("unsupported tracker event type")
         }
 
         Ok(event)
+    }
+
+    pub fn get_array(&self) -> &Vec<TrackerEvent> {
+        self.array.as_ref().unwrap()
+    }
+
+    pub fn get_dict(&self) -> &HashMap<i32, TrackerEvent> {
+        self.dictionary.as_ref().unwrap()
+    }
+
+    pub fn get_dict_entry(&self, index: i32) -> &TrackerEvent {
+        self.get_dict().get(&index).unwrap()
+    }
+
+    pub fn get_blob(&self) -> &Vec<u8> {
+        self.blob.as_ref().unwrap().as_ref()
+    }
+    pub fn get_blob_text(&self) -> String {
+        let blob = self.get_blob().clone();
+        String::from_utf8(blob).unwrap()
+    }
+
+    pub fn get_choice_flag(&self) -> i32 {
+        self.choice_flag.unwrap()
+    }
+
+    pub fn get_choice_data(&self) -> &TrackerEvent {
+        self.choice_data.as_ref().unwrap().as_ref()
+    }
+
+    pub fn get_optional_data(&self) -> &TrackerEvent {
+        self.optional_data.as_ref().unwrap().as_ref()
+    }
+
+    pub fn get_uint(&self) -> u64 {
+        self.unsigned_int.unwrap()
+    }
+
+    pub fn get_vint(&self) -> i64 {
+        self.variable_int.unwrap()
     }
 
     fn read_variable_int<R: io::Read>(r: &mut R) -> Result<i64, io::Error> {
