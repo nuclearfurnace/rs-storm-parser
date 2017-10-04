@@ -14,6 +14,7 @@ path = "src/bin.rs"
 [dependencies]
 backtrace = "0.3.3"
 bitstream-io = { git = "https://github.com/nuclearfurnace/bitstream-io", branch = "master" }
+#bitstream-io = { path = "../bitstream-io" }
 byteorder = "1.1.0"
 chrono = { version = "0.4.0", features = ["serde", "rustc-serialize"] }
 derivative = "1.0.0"

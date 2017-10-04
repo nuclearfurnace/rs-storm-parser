@@ -22,7 +22,7 @@ impl ReplayInit {
                         let mut reader = BinaryReader::new(&mut cursor);
 
                         let player_array_len = reader.read_vint32(5)?;
-                        for i in 0..player_array_len {
+                        for _ in 0..player_array_len {
                             reader.read_len_prefixed_blob(8)?; // player name
 
                             if reader.read_bool()? {
@@ -68,11 +68,17 @@ impl ReplayInit {
                                 reader.read_len_prefixed_blob(9)?; // m_spray - Currently Empty String
                             }
                             reader.read_len_prefixed_blob(7)?; // m_toonHandle - Currently Empty String
+
+                            println!("read position after player loop: {}", reader.position());
                         }
 
                         replay.random_value = reader.read_u32()?;
 
+                        println!("read position after random val: {}", reader.position());
+
                         reader.read_len_prefixed_blob(10)?; // m_gameCacheName - "Dflt"
+
+                        println!("read position after game cache: {}", reader.position());
 
                         reader.read_bool()?; // Lock Teams
                         reader.read_bool()?; // Teams Together
@@ -89,6 +95,8 @@ impl ReplayInit {
                         reader.read_vint32(2)?; // Observers
                         reader.read_vint32(2)?; // User Difficulty
                         reader.read_u64()?; // 64 bit int: Client Debug Flags
+
+                        println!("read position after random attributes: {}", reader.position());
 
                         // m_ammId
                         if replay.replay_build >= 43905 && reader.read_bool()? {
@@ -139,7 +147,7 @@ impl ReplayInit {
 
                         // m_slotDescriptions
                         let slot_desc_len = reader.read_vint32(5)?;
-                        for i in 0..slot_desc_len {
+                        for _ in 0..slot_desc_len {
                             let colors_len = reader.read_vint32(6)?;
                             reader.read_bit_array(colors_len)?; // m_allowedColors
                             let races_len = reader.read_vint32(8)?;
@@ -154,12 +162,14 @@ impl ReplayInit {
                             reader.read_bit_array(ai_builds_len)?; // m_allowedAIBuilds
                         }
 
+                        println!("read position after slot descs: {}", reader.position());
+
                         reader.read_vint32(6)?; // m_defaultDifficulty
                         reader.read_vint32(7)?; // m_defaultAIBuild
 
                         // m_cacheHandles
                         let cache_handles_len = reader.read_vint32(6)?;
-                        for i in 0..cache_handles_len {
+                        for _ in 0..cache_handles_len {
                             reader.read_bytes(40)?;
                         }
 
@@ -172,9 +182,13 @@ impl ReplayInit {
                         reader.read_vint32(5)?; // m_maxUsers
                         reader.read_vint32(5)?; // m_maxObservers
 
+
+                            println!("buffer length: {}", file_size);
+                            println!("read position before slots: {}", reader.position());
+
                         // m_slots
                         let slots_len = reader.read_vint32(5)?;
-                        for i in 0..slots_len {
+                        for _ in 0..slots_len {
                             let mut user_id: Option<u32> = None;
 
                             reader.read_u8()?; // m_control
@@ -196,12 +210,13 @@ impl ReplayInit {
                             let observer_status = reader.read_vint32(2)?;
 
                             reader.read_u32()?; // m_logoIndex
+
                             reader.read_len_prefixed_blob(9)?; // m_hero
 
                             let skin_skin_tint = match reader.read_len_prefixed_string(9) { // m_skin
                                 Ok(result) => match result.as_ref() {
                                     "" => None,
-                                    s => Some(result.clone())
+                                    _ => Some(result.clone())
                                 },
                                 Err(_) => None
                             };
@@ -209,14 +224,14 @@ impl ReplayInit {
                             let mount_mount_tint = match reader.read_len_prefixed_string(9) { // m_mount
                                 Ok(result) => match result.as_ref() {
                                     "" => None,
-                                    s => Some(result.clone())
+                                    _ => Some(result.clone())
                                 },
                                 Err(_) => None
                             };
 
                             // m_artifacts
                             let artifacts_len = reader.read_vint32(4)?;
-                            for i in 0..artifacts_len {
+                            for _ in 0..artifacts_len {
                                 reader.read_len_prefixed_blob(9)?;
                             }
 
@@ -245,7 +260,7 @@ impl ReplayInit {
 
                             // m_rewards
                             let rewards_len = reader.read_vint32(17)?;
-                            for i in 0..rewards_len {
+                            for _ in 0..rewards_len {
                                 reader.read_u32()?;
                             }
 
@@ -254,7 +269,7 @@ impl ReplayInit {
                             // m_licenses
                             if replay.replay_build < 49582 || replay.replay_build == 49838 {
                                 let licenses_len = reader.read_vint32(9)?;
-                                for i in 0..licenses_len {
+                                for _ in 0..licenses_len {
                                     reader.read_u32()?;
                                 }
                             }
@@ -269,8 +284,9 @@ impl ReplayInit {
                             }
 
                             if reader.read_bool()? && user_id.is_some() { // m_hasSilencePenalty
-                                let actual_user_id = user_id.unwrap() as usize;
-                                replay.players_by_user_id[actual_user_id].is_silenced = true;
+                                let actual_user_id = user_id.unwrap();
+                                let mut player = replay.get_player_by_user_id_or_slot_id(actual_user_id, 0).unwrap();
+                                player.is_silenced = true;
                             }
 
                             if replay.replay_version_major >= 2 {
@@ -282,7 +298,7 @@ impl ReplayInit {
                                 // m_heroMasteryTiers
                                 if replay.replay_build >= 52561 {
                                     let hero_mastery_tiers_len = reader.read_vint32(10)?;
-                                    for i in 0..hero_mastery_tiers_len {
+                                    for _ in 0..hero_mastery_tiers_len {
                                         reader.read_u32()?; // m_hero
                                         reader.read_u8()?; // m_tier
                                     }

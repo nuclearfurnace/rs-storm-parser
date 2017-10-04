@@ -1,5 +1,4 @@
-use std::io::prelude::*;
-use std::io::{Read, Cursor, SeekFrom, Error, ErrorKind};
+use std::io::{Cursor, Error, ErrorKind};
 
 use bitstream_io::{LE, BitReader};
 
@@ -10,6 +9,10 @@ pub struct BinaryReader<'a> {
 impl<'a> BinaryReader<'a> {
     pub fn new(cursor: &'a mut Cursor<Vec<u8>>) -> BinaryReader<'a> {
         BinaryReader{ inner: BitReader::new(cursor) }
+    }
+
+    pub fn position(&mut self) -> u64 {
+        self.inner.position()
     }
 
     pub fn skip_bytes(&mut self, count: u32) -> Result<(), Error> {
@@ -77,7 +80,7 @@ impl<'a> BinaryReader<'a> {
 
     pub fn read_string(&mut self, len: u32) -> Result<String, Error> {
         let raw = self.read_bytes(len as u64)?;
-        String::from_utf8(raw).map_err(|e| Error::new(ErrorKind::Other, "failed to convert string to utf-8"))
+        String::from_utf8(raw).map_err(|_| Error::new(ErrorKind::Other, "failed to convert string to utf-8"))
     }
 
     pub fn read_len_prefixed_blob(&mut self, size_bits: u32) -> Result<Vec<u8>, Error> {
@@ -88,7 +91,7 @@ impl<'a> BinaryReader<'a> {
 
     pub fn read_len_prefixed_string(&mut self, size_bits: u32) -> Result<String, Error> {
         let blob = self.read_len_prefixed_blob(size_bits)?;
-        String::from_utf8(blob).map_err(|e| Error::new(ErrorKind::Other, "failed to parse utf8 string"))
+        String::from_utf8(blob).map_err(|_| Error::new(ErrorKind::Other, "failed to parse utf8 string"))
     }
 
     pub fn align(&mut self) {

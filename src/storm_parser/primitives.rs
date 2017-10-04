@@ -3,7 +3,6 @@ use std::fmt;
 use std::io;
 
 use backtrace::Backtrace;
-use serde_json;
 
 #[derive(Serialize, Deserialize)]
 pub enum GameSpeed {

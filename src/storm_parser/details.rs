@@ -23,7 +23,7 @@ impl ReplayDetails {
                     Ok(_) => {
                         let mut details_cursor = Cursor::new(file_buf);
                         match TrackerEvent::new(&mut details_cursor) {
-                            Ok(mut event) => {
+                            Ok(event) => {
                                 let mut players: Vec<Player> = Vec::new();
                                 let players_array = event.get_dict_entry(0).get_optional_data().get_array();
                                 for x in players_array {
@@ -57,11 +57,11 @@ impl ReplayDetails {
                                     players.push(player);
                                 }
 
-                                /*let slot_id_data = event.get_dict_entry(0).get_optional_data().get_array();
+                                let slot_id_data = event.get_dict_entry(0).get_optional_data().get_array();
                                 for (i, player) in players.iter_mut().enumerate() {
-                                    let slot_id = slot_id_data[i].get_dict_entry(9).get_vint() as u32;
+                                    let slot_id = slot_id_data[i].get_dict_entry(9).get_optional_data().get_vint() as u32;
                                     player.slot_id = slot_id;
-                                }*/
+                                }
 
                                 replay.players = players;
                                 replay.map = event.get_dict_entry(1).get_blob_text();

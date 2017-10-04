@@ -1,5 +1,4 @@
 use std::io::Cursor;
-use std::fmt::Write;
 
 use chrono::prelude::*;
 use mpq::Archive;
@@ -8,7 +7,7 @@ use serde_json;
 use storm_parser::tracker::TrackerEvent;
 use storm_parser::details::ReplayDetails;
 use storm_parser::init::ReplayInit;
-use storm_parser::primitives::{Point, GameSpeed, GameMode, PlayerType, Player, ReplayResult, ReplayError, ReplayErrorKind};
+use storm_parser::primitives::{Point, GameSpeed, GameMode, Player, ReplayResult, ReplayError, ReplayErrorKind};
 
 #[derive(Derivative, Serialize, Deserialize)]
 #[derivative(Default)]
@@ -29,8 +28,6 @@ pub struct StormReplay {
     pub map_size: Point,
 
     pub players: Vec<Player>,
-    pub players_by_user_id: [Player; 16],
-    pub players_by_slot_id: [Player; 16],
 }
 
 impl StormReplay {
@@ -50,7 +47,7 @@ impl StormReplay {
                 Some(data) => {
                     let mut user_data_cursor = Cursor::new(data);
                     match TrackerEvent::new(&mut user_data_cursor) {
-                        Ok(mut event) => {
+                        Ok(event) => {
                             let version_string = format!("{}.{}.{}.{}",
                                 event.get_dict_entry(1).get_dict_entry(0).get_vint(),
                                 event.get_dict_entry(1).get_dict_entry(1).get_vint(),
@@ -97,8 +94,7 @@ impl StormReplay {
     }
 
     pub fn get_player_by_user_id_or_slot_id(&mut self, user_id: u32, slot_id: u32) -> Option<&mut Player> {
-        self.players.iter_mut()
-            .find(|ref p| p.user_id == user_id || p.slot_id == slot_id)
+        self.players.iter_mut().find(|ref p| p.user_id == user_id || p.slot_id == slot_id)
     }
 
     pub fn to_json(&self) -> ReplayResult<String> {
