@@ -3,6 +3,9 @@ name = "StormParser"
 version = "0.1.0"
 authors = ["Toby Lawrence <toby@nuclearfurnace.com>"]
 
+[profile.release]
+lto = true
+
 [lib]
 name = "storm_parser"
 path = "src/lib.rs"
