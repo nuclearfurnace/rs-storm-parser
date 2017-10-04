@@ -8,15 +8,14 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     let replay_file = &args[1];
-    println!("Reading from file {}...", replay_file);
-
-    match StormParser::parse_file(replay_file) {
+    ::std::process::exit(match StormParser::parse_file(replay_file) {
         Ok(result) => {
-            println!("File processed.  Result: ");
             println!("{}", result);
+            0
         },
-        Err(e) => println!("Error encountered: {}", e)
-    };
-
-    println!("Done.");
+        Err(e) => {
+            println!("error");
+            1
+        }
+    });
 }

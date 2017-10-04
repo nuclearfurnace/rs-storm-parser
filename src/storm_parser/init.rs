@@ -68,17 +68,11 @@ impl ReplayInit {
                                 reader.read_len_prefixed_blob(9)?; // m_spray - Currently Empty String
                             }
                             reader.read_len_prefixed_blob(7)?; // m_toonHandle - Currently Empty String
-
-                            println!("read position after player loop: {}", reader.position());
                         }
 
                         replay.random_value = reader.read_u32()?;
 
-                        println!("read position after random val: {}", reader.position());
-
                         reader.read_len_prefixed_blob(10)?; // m_gameCacheName - "Dflt"
-
-                        println!("read position after game cache: {}", reader.position());
 
                         reader.read_bool()?; // Lock Teams
                         reader.read_bool()?; // Teams Together
@@ -95,8 +89,6 @@ impl ReplayInit {
                         reader.read_vint32(2)?; // Observers
                         reader.read_vint32(2)?; // User Difficulty
                         reader.read_u64()?; // 64 bit int: Client Debug Flags
-
-                        println!("read position after random attributes: {}", reader.position());
 
                         // m_ammId
                         if replay.replay_build >= 43905 && reader.read_bool()? {
@@ -162,8 +154,6 @@ impl ReplayInit {
                             reader.read_bit_array(ai_builds_len)?; // m_allowedAIBuilds
                         }
 
-                        println!("read position after slot descs: {}", reader.position());
-
                         reader.read_vint32(6)?; // m_defaultDifficulty
                         reader.read_vint32(7)?; // m_defaultAIBuild
 
@@ -181,10 +171,6 @@ impl ReplayInit {
                         reader.read_vint32(3)?; // m_phase
                         reader.read_vint32(5)?; // m_maxUsers
                         reader.read_vint32(5)?; // m_maxObservers
-
-
-                            println!("buffer length: {}", file_size);
-                            println!("read position before slots: {}", reader.position());
 
                         // m_slots
                         let slots_len = reader.read_vint32(5)?;
