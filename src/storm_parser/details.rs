@@ -7,7 +7,7 @@ use lazysort::Sorted;
 
 use storm_parser::replay::StormReplay;
 use storm_parser::tracker::TrackerEvent;
-use storm_parser::primitives::{Player, PlayerType, ReplayResult, ReplayError, ReplayErrorKind};
+use storm_parser::primitives::{Player, PlayerType, Difficulty, ReplayResult, ReplayError, ReplayErrorKind};
 
 pub struct ReplayDetails {
 }
@@ -42,13 +42,15 @@ impl ReplayDetails {
                                         battlenet_region_id: x.get_dict_entry(1).get_dict_entry(0).get_vint() as u32,
                                         battlenet_sub_id: x.get_dict_entry(1).get_dict_entry(2).get_vint() as u32,
                                         battlenet_id: x.get_dict_entry(1).get_dict_entry(4).get_vint() as u32,
-                                        user_id: 0,
-                                        slot_id: 0,
+                                        index: 0,
                                         color: player_color,
                                         team: x.get_dict_entry(5).get_vint() as u32,
                                         handicap: x.get_dict_entry(6).get_vint() as i32,
                                         is_winner: x.get_dict_entry(8).get_vint() == 1,
                                         character: x.get_dict_entry(10).get_blob_text(),
+                                        character_level: 1,
+                                        is_auto_select: false,
+                                        difficulty: Difficulty::Beginner,
                                         is_silenced: false,
                                         skin: None,
                                         mount: None,
@@ -57,10 +59,10 @@ impl ReplayDetails {
                                     players.push(player);
                                 }
 
-                                let slot_id_data = event.get_dict_entry(0).get_optional_data().get_array();
+                                let index_data = event.get_dict_entry(0).get_optional_data().get_array();
                                 for (i, player) in players.iter_mut().enumerate() {
-                                    let slot_id = slot_id_data[i].get_dict_entry(9).get_optional_data().get_vint() as u32;
-                                    player.slot_id = slot_id;
+                                    let index = index_data[i].get_dict_entry(9).get_optional_data().get_vint() as u32;
+                                    player.index = index;
                                 }
 
                                 replay.players = players;

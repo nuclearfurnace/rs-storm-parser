@@ -7,7 +7,8 @@ use serde_json;
 use storm_parser::tracker::TrackerEvent;
 use storm_parser::details::ReplayDetails;
 use storm_parser::init::ReplayInit;
-use storm_parser::primitives::{Point, GameSpeed, GameMode, Player, ReplayResult, ReplayError, ReplayErrorKind};
+use storm_parser::attributes::ReplayAttributes;
+use storm_parser::primitives::*;
 
 #[derive(Derivative, Serialize, Deserialize)]
 #[derivative(Default)]
@@ -28,6 +29,8 @@ pub struct StormReplay {
     pub map_size: Point,
 
     pub players: Vec<Player>,
+    pub team_size: TeamSize,
+    pub bans: DraftBans,
 }
 
 impl StormReplay {
@@ -37,6 +40,7 @@ impl StormReplay {
         replay.parse_replay_metadata(archive)?;
         replay.parse_replay_details(archive)?;
         replay.parse_replay_init(archive)?;
+        replay.parse_replay_attributes(archive)?;
 
         Ok(replay)
     }
@@ -93,8 +97,12 @@ impl StormReplay {
         ReplayInit::parse_replay_init(self, archive)
     }
 
-    pub fn get_player_by_user_id_or_slot_id(&mut self, user_id: u32, slot_id: u32) -> Option<&mut Player> {
-        self.players.iter_mut().find(|ref p| p.user_id == user_id || p.slot_id == slot_id)
+    fn parse_replay_attributes(&mut self, archive: &mut Archive) -> ReplayResult<()> {
+        ReplayAttributes::parse_replay_attributes(self, archive)
+    }
+
+    pub fn get_player_by_index(&mut self, index: u32) -> Option<&mut Player> {
+        self.players.iter_mut().find(|ref p| p.index == index)
     }
 
     pub fn to_json(&self) -> ReplayResult<String> {

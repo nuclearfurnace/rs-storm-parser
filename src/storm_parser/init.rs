@@ -1,5 +1,3 @@
-use std::io::Cursor;
-
 use mpq::Archive;
 
 use storm_parser::replay::StormReplay;
@@ -18,12 +16,11 @@ impl ReplayInit {
 
                 match file.read(archive, file_buf.as_mut()) {
                     Ok(_) => {
-                        let mut cursor = Cursor::new(file_buf);
-                        let mut reader = BinaryReader::new(&mut cursor);
+                        let mut reader = BinaryReader::new(&file_buf);
 
-                        let player_array_len = reader.read_vint32(5)?;
+                        let player_array_len = reader.read_vu32(5)?;
                         for _ in 0..player_array_len {
-                            reader.read_len_prefixed_blob(8)?; // player name
+                            reader.read_len_prefixed_string(8)?; // player name
 
                             if reader.read_bool()? {
                                 reader.read_len_prefixed_blob(8)?; // clanTag
@@ -58,7 +55,7 @@ impl ReplayInit {
 
                             reader.read_u32()?; // m_testType
 
-                            reader.read_vint32(2)?; //observer
+                            reader.read_vu32(2)?; //observer
 
                             reader.read_len_prefixed_blob(9)?; // m_hero - Currently Empty String
                             reader.read_len_prefixed_blob(9)?; // m_skin - Currently Empty String
@@ -85,10 +82,11 @@ impl ReplayInit {
                         reader.read_bool()?; // m_cooperative
                         reader.read_bool()?; // m_noVictoryOrDefeat
                         reader.read_bool()?; // m_heroDuplicatesAllowed
-                        reader.read_vint32(2)?; // Fog
-                        reader.read_vint32(2)?; // Observers
-                        reader.read_vint32(2)?; // User Difficulty
-                        reader.read_u64()?; // 64 bit int: Client Debug Flags
+                        reader.read_vu32(2)?; // Fog
+                        reader.read_vu32(2)?; // Observers
+                        reader.read_vu32(2)?; // User Difficulty
+                        reader.read_u32()?; // 64 bit int: Client Debug Flags
+                        reader.read_u32()?;
 
                         // m_ammId
                         if replay.replay_build >= 43905 && reader.read_bool()? {
@@ -103,24 +101,24 @@ impl ReplayInit {
                             }
                         }
 
-                        reader.read_vint32(3)?; // Game Speed
+                        reader.read_vu32(3)?; // Game Speed
 
                         // Not sure what this 'Game Type' is
-                        reader.read_vint32(3)?;
+                        reader.read_vu32(3)?;
 
-                        let max_users = reader.read_vint32(5)?;
+                        let max_users = reader.read_vu32(5)?;
                         if max_users != 10 {
                             replay.game_mode = GameMode::TryMe;
                         }
 
-                        reader.read_vint32(5)?; // Max Observers
-                        reader.read_vint32(5)?; // Max Players
-                        reader.read_vint32(4)?; // + 1 = Max Teams
-                        reader.read_vint32(6)?; // Max Colors
+                        reader.read_vu32(5)?; // Max Observers
+                        reader.read_vu32(5)?; // Max Players
+                        reader.read_vu32(4)?; // + 1 = Max Teams
+                        reader.read_vu32(6)?; // Max Colors
                         reader.read_u8()?; // + 1 = Max Races
                         reader.read_u8()?; // Max Controls
 
-                        replay.map_size = Point { x: reader.read_vint32(8)? as i32, y: reader.read_vint32(8)? as i32 };
+                        replay.map_size = Point { x: reader.read_vu32(8)? as i32, y: reader.read_vu32(8)? as i32 };
                         if replay.map_size.y == 1 {
                             replay.map_size.y = replay.map_size.x;
                         } else if replay.map_size.x == 0 {
@@ -138,27 +136,27 @@ impl ReplayInit {
                         reader.read_u32()?; // m_modFileSyncChecksum
 
                         // m_slotDescriptions
-                        let slot_desc_len = reader.read_vint32(5)?;
+                        let slot_desc_len = reader.read_vu32(5)?;
                         for _ in 0..slot_desc_len {
-                            let colors_len = reader.read_vint32(6)?;
+                            let colors_len = reader.read_vu32(6)?;
                             reader.read_bit_array(colors_len)?; // m_allowedColors
-                            let races_len = reader.read_vint32(8)?;
+                            let races_len = reader.read_vu32(8)?;
                             reader.read_bit_array(races_len)?; // m_allowedRaces
-                            let difficulty_len = reader.read_vint32(6)?;
+                            let difficulty_len = reader.read_vu32(6)?;
                             reader.read_bit_array(difficulty_len)?; // m_allowedDifficulty
-                            let controls_len = reader.read_vint32(8)?;
+                            let controls_len = reader.read_vu32(8)?;
                             reader.read_bit_array(controls_len)?; // m_allowedControls
-                            let observe_types_len = reader.read_vint32(2)?;
+                            let observe_types_len = reader.read_vu32(2)?;
                             reader.read_bit_array(observe_types_len)?; // m_allowedObserveTypes
-                            let ai_builds_len = reader.read_vint32(7)?;
+                            let ai_builds_len = reader.read_vu32(7)?;
                             reader.read_bit_array(ai_builds_len)?; // m_allowedAIBuilds
                         }
 
-                        reader.read_vint32(6)?; // m_defaultDifficulty
-                        reader.read_vint32(7)?; // m_defaultAIBuild
+                        reader.read_vu32(6)?; // m_defaultDifficulty
+                        reader.read_vu32(7)?; // m_defaultAIBuild
 
                         // m_cacheHandles
-                        let cache_handles_len = reader.read_vint32(6)?;
+                        let cache_handles_len = reader.read_vu32(6)?;
                         for _ in 0..cache_handles_len {
                             reader.read_bytes(40)?;
                         }
@@ -168,32 +166,32 @@ impl ReplayInit {
                         reader.read_bool()?; // m_isPremadeFFA
                         reader.read_bool()?; // m_isCoopMode
 
-                        reader.read_vint32(3)?; // m_phase
-                        reader.read_vint32(5)?; // m_maxUsers
-                        reader.read_vint32(5)?; // m_maxObservers
+                        reader.read_vu32(3)?; // m_phase
+                        reader.read_vu32(5)?; // m_maxUsers
+                        reader.read_vu32(5)?; // m_maxObservers
 
                         // m_slots
-                        let slots_len = reader.read_vint32(5)?;
+                        let slots_len = reader.read_vu32(5)?;
                         for _ in 0..slots_len {
                             let mut user_id: Option<u32> = None;
 
                             reader.read_u8()?; // m_control
                             if reader.read_bool()? {
-                                user_id = Some(reader.read_vint32(4)?); // m_userId
+                                user_id = Some(reader.read_vu32(4)?); // m_userId
                             }
-                            reader.read_vint32(4)?; // m_teamId
+                            reader.read_vu32(4)?; // m_teamId
                             if reader.read_bool()? {
-                                reader.read_vint32(5)?; // m_colorPref
+                                reader.read_vu32(5)?; // m_colorPref
                             }
                             if reader.read_bool()? {
                                 reader.read_u8()?; // m_racePref
                             }
-                            reader.read_vint32(6)?; // m_difficulty
-                            reader.read_vint32(7)?; // m_aiBuild
-                            reader.read_vint32(7)?; // m_handicap
+                            reader.read_vu32(6)?; // m_difficulty
+                            reader.read_vu32(7)?; // m_aiBuild
+                            reader.read_vu32(7)?; // m_handicap
 
                             // m_observe
-                            let observer_status = reader.read_vint32(2)?;
+                            let observer_status = reader.read_vu32(2)?;
 
                             reader.read_u32()?; // m_logoIndex
 
@@ -216,25 +214,20 @@ impl ReplayInit {
                             };
 
                             // m_artifacts
-                            let artifacts_len = reader.read_vint32(4)?;
+                            let artifacts_len = reader.read_vu32(4)?;
                             for _ in 0..artifacts_len {
                                 reader.read_len_prefixed_blob(9)?;
                             }
 
                             let mut working_set_slot_id: Option<u32> = None;
                             if reader.read_bool()? {
-                                working_set_slot_id = Some(reader.read_vint32(8)?); // m_workingSetSlotId
+                                working_set_slot_id = Some(reader.read_vu32(8)?); // m_workingSetSlotId
                             }
 
                             if user_id.is_some() && working_set_slot_id.is_some() {
                                 let actual_slot_id = working_set_slot_id.unwrap();
-                                let actual_user_id = user_id.unwrap();
 
-                                let mut player = replay.get_player_by_user_id_or_slot_id(actual_user_id, actual_slot_id).unwrap();
-
-                                // Just re-up the user and slot IDs while we're here.
-                                player.user_id = actual_user_id;
-                                player.slot_id = actual_slot_id;
+                                let mut player = replay.get_player_by_index(actual_slot_id).unwrap();
 
                                 if observer_status == 2 {
                                     player.player_type = PlayerType::Spectator;
@@ -245,7 +238,7 @@ impl ReplayInit {
                             }
 
                             // m_rewards
-                            let rewards_len = reader.read_vint32(17)?;
+                            let rewards_len = reader.read_vu32(17)?;
                             for _ in 0..rewards_len {
                                 reader.read_u32()?;
                             }
@@ -254,14 +247,14 @@ impl ReplayInit {
 
                             // m_licenses
                             if replay.replay_build < 49582 || replay.replay_build == 49838 {
-                                let licenses_len = reader.read_vint32(9)?;
+                                let licenses_len = reader.read_vu32(9)?;
                                 for _ in 0..licenses_len {
                                     reader.read_u32()?;
                                 }
                             }
 
                             if reader.read_bool()? {
-                                reader.read_vint32(4)?; // m_tandemLeaderUserId
+                                reader.read_vu32(4)?; // m_tandemLeaderUserId
                             }
 
                             if replay.replay_build <= 41504 {
@@ -270,8 +263,8 @@ impl ReplayInit {
                             }
 
                             if reader.read_bool()? && user_id.is_some() { // m_hasSilencePenalty
-                                let actual_user_id = user_id.unwrap();
-                                let mut player = replay.get_player_by_user_id_or_slot_id(actual_user_id, 0).unwrap();
+                                let actual_slot_id = user_id.unwrap();
+                                let mut player = replay.get_player_by_index(actual_slot_id).unwrap();
                                 player.is_silenced = true;
                             }
 
@@ -283,7 +276,7 @@ impl ReplayInit {
 
                                 // m_heroMasteryTiers
                                 if replay.replay_build >= 52561 {
-                                    let hero_mastery_tiers_len = reader.read_vint32(10)?;
+                                    let hero_mastery_tiers_len = reader.read_vu32(10)?;
                                     for _ in 0..hero_mastery_tiers_len {
                                         reader.read_u32()?; // m_hero
                                         reader.read_u8()?; // m_tier
@@ -298,7 +291,7 @@ impl ReplayInit {
                         }
 
                         if reader.read_bool()? {
-                            reader.read_vint32(4)?; // m_hostUserId
+                            reader.read_vu32(4)?; // m_hostUserId
                         }
 
                         reader.read_bool()?; // m_isSinglePlayer
@@ -307,9 +300,9 @@ impl ReplayInit {
 
                         reader.read_u32()?; // m_gameDuration - So far, always 0
 
-                        reader.read_vint32(6)?; // m_defaultDifficulty
+                        reader.read_vu32(6)?; // m_defaultDifficulty
 
-                        reader.read_vint32(7)?; // m_defaultAIBuild
+                        reader.read_vu32(7)?; // m_defaultAIBuild
 
                         Ok(())
                     },

@@ -4,73 +4,53 @@ use std::io;
 
 use backtrace::Backtrace;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Primitive, Serialize, Deserialize, Copy, Clone, Debug)]
 pub enum GameSpeed {
-    Unknown,
-    Slower,
-    Slow,
-    Normal,
-    Fast,
-    Faster,
-}
-
-impl GameSpeed {
-    fn from_i32(v: i32) -> GameSpeed {
-        match v {
-            0 => GameSpeed::Unknown,
-            1 => GameSpeed::Slower,
-            2 => GameSpeed::Slow,
-            3 => GameSpeed::Normal,
-            4 => GameSpeed::Fast,
-            5 => GameSpeed::Faster,
-            _ => GameSpeed::Unknown,
-        }
-    }
+    Unknown = 0,
+    Slower = 1,
+    Slow = 2,
+    Normal = 3,
+    Fast = 4,
+    Faster = 5,
 }
 
 impl Default for GameSpeed {
     fn default() -> GameSpeed { GameSpeed::Unknown }
 }
 
-#[derive(Serialize, Deserialize)]
-pub enum GameMode {
-    Unknown,
-    Event,
-    Custom,
-    TryMe,
-    Practice,
-    Cooperative,
-    QuickMatch,
-    HeroLeague,
-    TeamLeague,
-    UnrankedDraft,
-    Brawl,
-}
-
-impl GameMode {
-    fn from_i32(v: i32) -> GameMode {
-        match v {
-            -9 => GameMode::Unknown,
-            -2 => GameMode::Event,
-            -1 => GameMode::Custom,
-            0 => GameMode::TryMe,
-            1 => GameMode::Practice,
-            2 => GameMode::Cooperative,
-            3 => GameMode::QuickMatch,
-            4 => GameMode::HeroLeague,
-            5 => GameMode::TeamLeague,
-            6 => GameMode::UnrankedDraft,
-            7 => GameMode::Brawl,
-            _ => GameMode::Unknown,
+impl GameSpeed {
+    pub fn from_str(s: &str) -> GameSpeed {
+        match s.to_lowercase().as_ref() {
+            "slor" => GameSpeed::Slower,
+            "slow" => GameSpeed::Slow,
+            "norm" => GameSpeed::Normal,
+            "fast" => GameSpeed::Fast,
+            "fasr" => GameSpeed::Faster,
+            _ => panic!("unknown game speed: {}", s)
         }
     }
+}
+
+#[derive(SignedPrimitive, Serialize, Deserialize, Copy, Clone, PartialEq, Debug)]
+pub enum GameMode {
+    Unknown = -9,
+    Event = -2,
+    Custom = -1,
+    TryMe = 0,
+    Practice = 1,
+    Cooperative = 2,
+    QuickMatch = 3,
+    HeroLeague = 4,
+    TeamLeague = 5,
+    UnrankedDraft = 6,
+    Brawl = 7,
 }
 
 impl Default for GameMode {
     fn default() -> GameMode { GameMode::Unknown }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub enum PlayerType {
     Human,
     Computer,
@@ -78,10 +58,104 @@ pub enum PlayerType {
 }
 
 impl Default for PlayerType {
-    fn default() -> PlayerType { PlayerType::Human }
+    fn default() -> PlayerType { PlayerType::Computer }
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Primitive, Serialize, Deserialize, Copy, Clone, Debug)]
+pub enum ReplayAttributeEventType
+{
+    Unknown = 0,
+
+    PlayerTypeAttribute = 500,
+
+    /* 2000 - 2024 are related to team sizes */
+    TeamSizeAttribute = 2001,
+
+    GameSpeedAttribute = 3000,
+    DifficultyLevelAttribute = 3004,
+    GameTypeAttribute = 3009,
+    /* 3100 - 3300 are related to AI builds (for Starcraft 2) */
+
+    Hero = 4002,
+    SkinAndSkinTint = 4003,
+    CharacterLevel = 4008,
+    LobbyMode = 4010,
+    ReadyMode = 4018,
+
+    DraftTeam1BanChooserSlot = 4022,
+    DraftTeam1Ban1 = 4023,
+    DraftTeam1Ban2 = 4025,
+
+    DraftTeam2BanChooserSlot = 4027,
+    DraftTeam2Ban1 = 4028,
+    DraftTeam2Ban2 = 4030,
+
+    /* 4100 - 4200 are related to Artifacts, no longer in the game */
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+pub enum Difficulty {
+    Beginner,
+    Recruit,
+    Adept,
+    Veteran,
+    Elite,
+}
+
+impl Difficulty {
+    pub fn from_str(s: &str) -> Difficulty {
+        match s.to_lowercase().as_ref() {
+            "vyey" => Difficulty::Beginner,
+            "easy" => Difficulty::Recruit,
+            "medi" => Difficulty::Adept,
+            "hdvh" => Difficulty::Veteran,
+            "vyhd" => Difficulty::Elite,
+            _ => panic!("unknown difficulty type: {}", s)
+        }
+    }
+}
+
+impl Default for Difficulty {
+    fn default() -> Difficulty { Difficulty::Beginner }
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+pub enum TeamSize {
+    OneVsOne,
+    TwoVsTwo,
+    ThreeVsThree,
+    FourVsFour,
+    FiveVsFive,
+    FFA,
+}
+
+impl Default for TeamSize {
+    fn default() -> TeamSize { TeamSize::FFA }
+}
+
+impl TeamSize {
+    pub fn from_str(s: &str) -> TeamSize {
+        match s.to_lowercase().as_ref() {
+            "1v1" => TeamSize::OneVsOne,
+            "2v2" => TeamSize::TwoVsTwo,
+            "3v3" => TeamSize::ThreeVsThree,
+            "4v4" => TeamSize::FourVsFour,
+            "5v5" => TeamSize::FiveVsFive,
+            "ffa" => TeamSize::FFA,
+            _ => panic!("unknown team size: {}", s)
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Default, Debug)]
+pub struct DraftBans {
+    pub team_one_first_ban: String,
+    pub team_one_second_ban: String,
+    pub team_two_first_ban: String,
+    pub team_two_second_ban: String,
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Default)]
 pub struct Point {
     pub x: i32,
     pub y: i32
@@ -144,8 +218,7 @@ pub struct Player {
     pub battlenet_region_id: u32,
     pub battlenet_sub_id: u32,
     pub battlenet_id: u32,
-    pub user_id: u32,
-    pub slot_id: u32,
+    pub index: u32,
     // 4-bytes long, ARGB
     pub color: Vec<u32>,
     pub team: u32,
@@ -153,6 +226,9 @@ pub struct Player {
     pub is_winner: bool,
     pub is_silenced: bool,
     pub character: String,
+    pub character_level: u32,
     pub skin: Option<String>,
     pub mount: Option<String>,
+    pub difficulty: Difficulty,
+    pub is_auto_select: bool,
 }

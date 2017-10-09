@@ -4,6 +4,7 @@ mod replay;
 mod tracker;
 mod details;
 mod init;
+mod attributes;
 
 use mpq::Archive;
 use self::replay::StormReplay;
