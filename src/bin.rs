@@ -1,7 +1,6 @@
 extern crate storm_parser;
 
 use std::env;
-use std::str;
 use storm_parser::StormParser;
 
 fn main() {

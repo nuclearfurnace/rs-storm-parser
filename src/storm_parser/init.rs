@@ -227,7 +227,7 @@ impl ReplayInit {
                             if user_id.is_some() && working_set_slot_id.is_some() {
                                 let actual_slot_id = working_set_slot_id.unwrap();
 
-                                let mut player = replay.get_player_by_index(actual_slot_id).unwrap();
+                                let player = replay.get_player_by_index(actual_slot_id).unwrap();
 
                                 if observer_status == 2 {
                                     player.player_type = PlayerType::Spectator;
@@ -264,7 +264,7 @@ impl ReplayInit {
 
                             if reader.read_bool()? && user_id.is_some() { // m_hasSilencePenalty
                                 let actual_slot_id = user_id.unwrap();
-                                let mut player = replay.get_player_by_index(actual_slot_id).unwrap();
+                                let player = replay.get_player_by_index(actual_slot_id).unwrap();
                                 player.is_silenced = true;
                             }
 
