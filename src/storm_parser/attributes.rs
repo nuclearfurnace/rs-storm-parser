@@ -23,27 +23,20 @@ impl ReplayAttribute {
             return None
         }
 
-        let buf = match self.value[0] {
-            0u8 => {
-                let mut x = self.value.to_vec();
-                x.reverse();
-                x
-            },
-            _ => self.value.to_vec()
-        };
+        let mut buf = self.value.to_vec();
+        if buf[0] == 0u8 {
+            buf.reverse();
+        }
 
-        let mut parsed = match buf[3] {
+        let parsed = match buf[3] {
             0u8 => match CStr::from_bytes_with_nul(&buf) {
                 Ok(cstr) => {
                     match cstr.to_str() {
-                        Ok(cstr_utf8) => {
-                            let mut result = cstr_utf8.to_string();
-                            Some(result)
-                        },
+                        Ok(cstr_utf8) => Some(cstr_utf8.to_string()),
                         Err(_) => None
                     }
                 },
-                Err(e) => panic!("error reading value as c string: {}", e)
+                Err(e) => panic!("error reading value as C string: {}", e)
             },
             _ => String::from_utf8(buf).ok()
         };
