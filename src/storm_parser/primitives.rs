@@ -93,6 +93,56 @@ pub enum ReplayAttributeEventType
     /* 4100 - 4200 are related to Artifacts, no longer in the game */
 }
 
+#[derive(Primitive, Serialize, Deserialize, Copy, Clone, Debug)]
+pub enum ReplayGameEventType
+{
+    StartGameEvent = 2,
+    DropOurselvesEvent = 3,
+    UserFinishedLoadingSyncEvent = 5,
+    UserOptionsEvent = 7,
+    BankFileEvent = 9,
+    BankSectionEvent = 10,
+    BankKeyEvent = 11,
+    BankSignatureEvent = 13,
+    CameraSaveEvent = 14,
+    CommandManagerResetEvent = 25,
+    GameCheatEvent = 26,
+    CmdEvent = 27,
+    SelectionDeltaEvent = 28,
+    ControlGroupUpdateEvent = 29,
+    SelectionSyncCheckEvent = 30,
+    ResourceTradeEvent = 31,
+    TriggerChatMessageEvent = 32,
+    SetAbsoluteGameSpeedEvent = 34,
+    TriggerPingEvent = 36,
+    UnitClickEvent = 39,
+    TriggerSkippedEvent = 44,
+    TriggerSoundLengthQueryEvent = 45,
+    TriggerSoundOffsetEvent = 46,
+    TriggerTransmissionOffsetEvent = 47,
+    TriggerTransmissionCompleteEvent = 48,
+    CameraUpdateEvent = 49,
+    TriggerPlanetMissionLaunchedEvent = 53,
+    TriggerDialogControlEvent = 55,
+    TriggerSoundLengthSyncEvent = 56,
+    TriggerConversationSkippedEvent = 57,
+    TriggerMouseClickedEvent = 58,
+    TriggerMouseMovedEvent = 59,
+    TriggerHotkeyPressedEvent = 61,
+    TriggerTargetModeUpdateEvent = 62,
+    TriggerSoundtrackDoneEvent = 64,
+    TriggerKeyPressedEvent = 66,
+    TriggerCutsceneBookmarkFiredEvent = 97,
+    TriggerCutsceneEndSceneFiredEvent = 98,
+    GameUserLeaveEvent = 101,
+    GameUserJoinEvent = 102,
+    CommandManagerStateEvent = 103,
+    CmdUpdateTargetPointEvent = 104,
+    CmdUpdateTargetUnitEvent = 105,
+    HeroTalentSelectedEvent = 110,
+    HeroTalentTreeSelectionPanelToggled = 112
+}
+
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub enum Difficulty {
     Beginner,
@@ -100,6 +150,10 @@ pub enum Difficulty {
     Adept,
     Veteran,
     Elite,
+}
+
+impl Default for Difficulty {
+    fn default() -> Difficulty { Difficulty::Beginner }
 }
 
 impl Difficulty {
@@ -113,10 +167,6 @@ impl Difficulty {
             _ => panic!("unknown difficulty type: {}", s)
         }
     }
-}
-
-impl Default for Difficulty {
-    fn default() -> Difficulty { Difficulty::Beginner }
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
