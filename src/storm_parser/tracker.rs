@@ -1,10 +1,12 @@
 use std::io;
 use std::collections::HashMap;
-use byteorder::{LittleEndian, ReadBytesExt};
+
+use storm_parser::binary_reader::BinaryReader;
+use storm_parser::primitives::*;
 
 #[derive(Debug, Default)]
 pub struct TrackerEvent {
-    pub data_type: i32,
+    pub data_type: u32,
     array: Option<Vec<TrackerEvent>>,
     dictionary: Option<HashMap<i32, TrackerEvent>>,
     blob: Option<Vec<u8>>,
@@ -16,10 +18,10 @@ pub struct TrackerEvent {
 }
 
 impl TrackerEvent {
-    pub fn new<R: io::Read>(r: &mut R) -> Result<TrackerEvent, io::Error> {
+    pub fn new(r: &mut BinaryReader) -> ReplayResult<TrackerEvent> {
         let mut event: TrackerEvent = Default::default();
 
-        event.data_type = r.read_u8()? as i32;
+        event.data_type = r.read_u8()? as u32;
         match event.data_type {
             0x00 => {
                 let array_len = TrackerEvent::read_variable_int(r)?;
@@ -34,8 +36,7 @@ impl TrackerEvent {
             0x01 => panic!("unsupported tracker event type"),
             0x02 => {
                 let blob_len = TrackerEvent::read_variable_int(r)?;
-                let mut buf: Vec<u8> = vec![0; blob_len as usize];
-                r.read_exact(&mut buf)?;
+                let buf = r.read_bytes(blob_len as u32)?;
 
                 event.blob = Some(buf);
             },
@@ -71,10 +72,10 @@ impl TrackerEvent {
                 event.unsigned_int = Some(r.read_u8()? as u64);
             },
             0x07 => {
-                event.unsigned_int = Some(r.read_u32::<LittleEndian>()? as u64);
+                event.unsigned_int = Some(r.read_u32_le()? as u64);
             },
             0x08 => {
-                event.unsigned_int = Some(r.read_u64::<LittleEndian>()?);
+                event.unsigned_int = Some(r.read_u64_le()?);
             },
             0x09 => {
                 event.variable_int = Some(TrackerEvent::read_variable_int(r)?);
@@ -125,7 +126,7 @@ impl TrackerEvent {
         self.variable_int.unwrap()
     }
 
-    fn read_variable_int<R: io::Read>(r: &mut R) -> Result<i64, io::Error> {
+    fn read_variable_int(r: &mut BinaryReader) -> Result<i64, io::Error> {
         let mut x: i64 = 0;
 
         let mut k: u64 = 0;

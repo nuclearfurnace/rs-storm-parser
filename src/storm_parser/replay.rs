@@ -1,9 +1,8 @@
-use std::io::Cursor;
-
 use chrono::prelude::*;
 use mpq::Archive;
 use serde_json;
 
+use storm_parser::binary_reader::BinaryReader;
 use storm_parser::tracker::TrackerEvent;
 use storm_parser::details::ReplayDetails;
 use storm_parser::init::ReplayInit;
@@ -49,8 +48,8 @@ impl StormReplay {
         match archive.read_user_data() {
             Ok(result) => match result {
                 Some(data) => {
-                    let mut user_data_cursor = Cursor::new(data);
-                    match TrackerEvent::new(&mut user_data_cursor) {
+                    let mut reader = BinaryReader::new(&data);
+                    match TrackerEvent::new(&mut reader) {
                         Ok(event) => {
                             let version_string = format!("{}.{}.{}.{}",
                                 event.get_dict_entry(1).get_dict_entry(0).get_vint(),

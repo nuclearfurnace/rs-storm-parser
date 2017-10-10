@@ -77,6 +77,10 @@ impl<'a> BinaryReader<'a> {
         self.read(32).map(|x| u32::from_be(x as u32))
     }
 
+    pub fn read_u64_le(&mut self) -> Result<u64, Error> {
+        self.read(64).map(|x| u64::from_be(x as u64))
+    }
+
     pub fn read_vu32(&mut self, bits: u32) -> Result<u32, Error> {
         self.read(bits).map(|x| x as u32)
     }

@@ -1,13 +1,12 @@
-use std::io::Cursor;
-
 use chrono::prelude::*;
 use chrono::Duration;
 use mpq::Archive;
 use lazysort::Sorted;
 
+use storm_parser::binary_reader::BinaryReader;
 use storm_parser::replay::StormReplay;
 use storm_parser::tracker::TrackerEvent;
-use storm_parser::primitives::{Player, PlayerType, Difficulty, ReplayResult, ReplayError, ReplayErrorKind};
+use storm_parser::primitives::*;
 
 pub struct ReplayDetails {
 }
@@ -21,8 +20,8 @@ impl ReplayDetails {
 
                 match file.read(archive, file_buf.as_mut()) {
                     Ok(_) => {
-                        let mut details_cursor = Cursor::new(file_buf);
-                        match TrackerEvent::new(&mut details_cursor) {
+                        let mut reader = BinaryReader::new(&file_buf);
+                        match TrackerEvent::new(&mut reader) {
                             Ok(event) => {
                                 let mut players: Vec<Player> = Vec::new();
                                 let players_array = event.get_dict_entry(0).get_optional_data().get_array();
