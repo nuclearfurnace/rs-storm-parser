@@ -96,6 +96,7 @@ pub enum ReplayAttributeEventType
 #[derive(Primitive, Serialize, Deserialize, Copy, Clone, Debug)]
 pub enum ReplayGameEventType
 {
+    Unknown = 0,
     StartGameEvent = 2,
     DropOurselvesEvent = 3,
     UserFinishedLoadingSyncEvent = 5,
@@ -141,6 +142,10 @@ pub enum ReplayGameEventType
     CmdUpdateTargetUnitEvent = 105,
     HeroTalentSelectedEvent = 110,
     HeroTalentTreeSelectionPanelToggled = 112
+}
+
+impl Default for ReplayGameEventType {
+    fn default() -> ReplayGameEventType { ReplayGameEventType::Unknown }
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
@@ -261,7 +266,7 @@ impl From<io::Error> for ReplayError {
     }
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct Player {
     pub name: String,
     pub player_type: PlayerType,

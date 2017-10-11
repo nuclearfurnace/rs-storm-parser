@@ -5,16 +5,16 @@ use storm_parser::binary_reader::BinaryReader;
 use storm_parser::primitives::*;
 
 #[derive(Debug, Default)]
-pub struct TrackerEvent {
-    pub data_type: u32,
-    array: Option<Vec<TrackerEvent>>,
-    dictionary: Option<HashMap<i32, TrackerEvent>>,
-    blob: Option<Vec<u8>>,
-    choice_flag: Option<i32>,
-    choice_data: Option<Box<TrackerEvent>>,
-    optional_data: Option<Box<TrackerEvent>>,
-    unsigned_int: Option<u64>,
-    variable_int: Option<i64>,
+pub(crate) struct TrackerEvent {
+    pub(crate) data_type: u32,
+    pub(crate) array: Option<Vec<TrackerEvent>>,
+    pub(crate) dictionary: Option<HashMap<i32, TrackerEvent>>,
+    pub(crate) blob: Option<Vec<u8>>,
+    pub(crate) choice_flag: Option<i32>,
+    pub(crate) choice_data: Option<Box<TrackerEvent>>,
+    pub(crate) optional_data: Option<Box<TrackerEvent>>,
+    pub(crate) unsigned_int: Option<u64>,
+    pub(crate) variable_int: Option<i64>,
 }
 
 impl TrackerEvent {

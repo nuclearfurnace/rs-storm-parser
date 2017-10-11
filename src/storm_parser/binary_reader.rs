@@ -85,6 +85,10 @@ impl<'a> BinaryReader<'a> {
         self.read(bits).map(|x| x as u32)
     }
 
+    pub fn read_i32(&mut self) -> Result<i32, Error> {
+        self.read(32).map(|x| x as u32).map(|x| x as i32)
+    }
+
     pub fn read_bytes(&mut self, count: u32) -> Result<Vec<u8>, Error> {
         let mut buf: Vec<u8> = vec![0; count as usize];
         self.read_bytes_direct(buf.as_mut_slice())?;

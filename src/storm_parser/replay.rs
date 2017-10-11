@@ -7,6 +7,7 @@ use storm_parser::tracker::TrackerEvent;
 use storm_parser::details::ReplayDetails;
 use storm_parser::init::ReplayInit;
 use storm_parser::attributes::ReplayAttributes;
+use storm_parser::events::ReplayGameEvents;
 use storm_parser::primitives::*;
 
 #[derive(Derivative, Serialize, Deserialize)]
@@ -40,6 +41,7 @@ impl StormReplay {
         replay.parse_replay_details(archive)?;
         replay.parse_replay_init(archive)?;
         replay.parse_replay_attributes(archive)?;
+        replay.parse_replay_game_events(archive)?;
 
         Ok(replay)
     }
@@ -98,6 +100,10 @@ impl StormReplay {
 
     fn parse_replay_attributes(&mut self, archive: &mut Archive) -> ReplayResult<()> {
         ReplayAttributes::parse_replay_attributes(self, archive)
+    }
+
+    fn parse_replay_game_events(&mut self, archive: &mut Archive) -> ReplayResult<()> {
+        ReplayGameEvents::parse_replay_game_events(self, archive)
     }
 
     pub fn get_player_by_index(&mut self, index: u32) -> Option<&mut Player> {
