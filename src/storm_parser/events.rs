@@ -1,12 +1,11 @@
 use std::io::Error;
-use std::time::Instant;
 
 use mpq::Archive;
 use num_traits::FromPrimitive;
 
 use storm_parser::replay::StormReplay;
 use storm_parser::binary_reader::BinaryReader;
-use storm_parser::tracker::TrackerEvent;
+use storm_parser::tracker::TrackerEventStructure;
 use storm_parser::primitives::*;
 
 #[derive(Serialize, Default, Debug)]
@@ -15,7 +14,7 @@ pub struct GameEvent {
     pub ticks_elapsed: u32,
     pub player: Option<u32>,
     pub is_global: bool,
-    pub data: Option<TrackerEvent>,
+    pub data: Option<TrackerEventStructure>,
 }
 
 pub struct ReplayGameEvents {
@@ -23,21 +22,14 @@ pub struct ReplayGameEvents {
 
 impl ReplayGameEvents {
     pub fn parse_replay_game_events(replay: &mut StormReplay, archive: &mut Archive) -> ReplayResult<()> {
-        let start = Instant::now();
-
         match archive.open_file("replay.game.events") {
             Ok(file) => {
                 let file_size = file.size();
                 let mut file_buf: Vec<u8> = vec![0; file_size as usize];
-                println!("game events decompressed size: {}", file_size);
 
                 match file.read(archive, file_buf.as_mut()) {
                     Ok(_) => {
-                        let duration = start.elapsed();
-                        let delta = (duration.as_secs() as f64 + duration.subsec_nanos() as f64 * 1e-9);
-                        println!("time to read game events file: {:.*}ms", 3, delta);
                         let mut reader = BinaryReader::new(&file_buf);
-
                         let mut game_events: Vec<GameEvent> = Vec::new();
                         let mut ticks_elapsed: u32 = 0;
 
@@ -105,7 +97,7 @@ impl ReplayGameEvents {
                                 ReplayGameEventType::BankSignatureEvent => {
                                     let array_len = reader.read_vu32(5)?;
                                     let mut event = get_tracker_event_array(array_len);
-                                    for i in 0..array_len {
+                                    for _i in 0..array_len {
                                         event.array.push(get_tracker_event_uint(&mut reader, 8)?);
                                     }
                                     event.blob = Some(reader.read_len_prefixed_blob(7)?);
@@ -553,7 +545,7 @@ impl ReplayGameEvents {
                             game_events.push(game_event);
                         }
 
-                        replay.events = game_events;
+                        replay.game_events = game_events;
 
                         Ok(())
                     },
@@ -565,11 +557,11 @@ impl ReplayGameEvents {
     }
 }
 
-fn get_tracker_event_empty() -> TrackerEvent {
+fn get_tracker_event_empty() -> TrackerEventStructure {
     Default::default()
 }
 
-fn get_tracker_event_array(slots: u32) -> TrackerEvent {
+fn get_tracker_event_array(slots: u32) -> TrackerEventStructure {
     let mut event = get_tracker_event_empty();
     let default = get_tracker_event_empty();
     event.data_type = 0x00;
@@ -577,11 +569,11 @@ fn get_tracker_event_array(slots: u32) -> TrackerEvent {
     event
 }
 
-fn get_tracker_event_bool(reader: &mut BinaryReader) -> Result<TrackerEvent, Error> {
+fn get_tracker_event_bool(reader: &mut BinaryReader) -> Result<TrackerEventStructure, Error> {
     get_tracker_event_uint(reader, 1)
 }
 
-fn get_tracker_event_uint(reader: &mut BinaryReader, bits: u32) -> Result<TrackerEvent, Error> {
+fn get_tracker_event_uint(reader: &mut BinaryReader, bits: u32) -> Result<TrackerEventStructure, Error> {
     let mut event = get_tracker_event_empty();
     let uint = reader.read_vu32(bits)?;
     event.data_type = 0x07;
@@ -589,7 +581,7 @@ fn get_tracker_event_uint(reader: &mut BinaryReader, bits: u32) -> Result<Tracke
     Ok(event)
 }
 
-fn get_tracker_event_vint(reader: &mut BinaryReader, bits: u32) -> Result<TrackerEvent, Error> {
+fn get_tracker_event_vint(reader: &mut BinaryReader, bits: u32) -> Result<TrackerEventStructure, Error> {
     let mut event = get_tracker_event_empty();
     let vint = reader.read_vu32(bits)? as i64;
     event.data_type = 0x09;
@@ -597,7 +589,7 @@ fn get_tracker_event_vint(reader: &mut BinaryReader, bits: u32) -> Result<Tracke
     Ok(event)
 }
 
-fn get_tracker_event_i8(reader: &mut BinaryReader) -> Result<TrackerEvent, Error> {
+fn get_tracker_event_i8(reader: &mut BinaryReader) -> Result<TrackerEventStructure, Error> {
     let mut event = get_tracker_event_empty();
     let vint = (reader.read_vu32(8)? as i8) as i64;
     event.data_type = 0x09;
@@ -605,7 +597,7 @@ fn get_tracker_event_i8(reader: &mut BinaryReader) -> Result<TrackerEvent, Error
     Ok(event)
 }
 
-fn get_tracker_event_i32(reader: &mut BinaryReader) -> Result<TrackerEvent, Error> {
+fn get_tracker_event_i32(reader: &mut BinaryReader) -> Result<TrackerEventStructure, Error> {
     let mut event = get_tracker_event_empty();
     let vint = (reader.read_vu32(32)? as i32) as i64;
     event.data_type = 0x09;
@@ -613,7 +605,7 @@ fn get_tracker_event_i32(reader: &mut BinaryReader) -> Result<TrackerEvent, Erro
     Ok(event)
 }
 
-fn get_tracker_event_u32(reader: &mut BinaryReader) -> Result<TrackerEvent, Error> {
+fn get_tracker_event_u32(reader: &mut BinaryReader) -> Result<TrackerEventStructure, Error> {
     let mut event = get_tracker_event_empty();
     let uint = reader.read_u32()?;
     event.data_type = 0x07;
@@ -621,7 +613,7 @@ fn get_tracker_event_u32(reader: &mut BinaryReader) -> Result<TrackerEvent, Erro
     Ok(event)
 }
 
-fn get_tracker_event_blob(reader: &mut BinaryReader, blob_len: u32) -> Result<TrackerEvent, Error> {
+fn get_tracker_event_blob(reader: &mut BinaryReader, blob_len: u32) -> Result<TrackerEventStructure, Error> {
     let mut event = get_tracker_event_empty();
     let blob = reader.read_len_prefixed_blob(blob_len)?;
     event.data_type = 0x02;
@@ -629,7 +621,7 @@ fn get_tracker_event_blob(reader: &mut BinaryReader, blob_len: u32) -> Result<Tr
     Ok(event)
 }
 
-fn get_tracker_event_bytes(reader: &mut BinaryReader, bytes: u32) -> Result<TrackerEvent, Error> {
+fn get_tracker_event_bytes(reader: &mut BinaryReader, bytes: u32) -> Result<TrackerEventStructure, Error> {
     let mut event = get_tracker_event_empty();
     let bytes = reader.read_bytes(bytes)?;
     event.data_type = 0x02;
@@ -637,7 +629,7 @@ fn get_tracker_event_bytes(reader: &mut BinaryReader, bytes: u32) -> Result<Trac
     Ok(event)
 }
 
-fn get_tracker_event_point3d(reader: &mut BinaryReader) -> Result<TrackerEvent, Error> {
+fn get_tracker_event_point3d(reader: &mut BinaryReader) -> Result<TrackerEventStructure, Error> {
     let x = get_tracker_event_uint(reader, 20)?;
     let y = get_tracker_event_uint(reader, 20)?;
     let z = get_tracker_event_i32(reader)?;
@@ -650,7 +642,7 @@ fn get_tracker_event_point3d(reader: &mut BinaryReader) -> Result<TrackerEvent, 
     Ok(array)
 }
 
-fn get_tracker_event_target_unit(reader: &mut BinaryReader) -> Result<TrackerEvent, Error> {
+fn get_tracker_event_target_unit(reader: &mut BinaryReader) -> Result<TrackerEventStructure, Error> {
     let mut event = get_tracker_event_array(7);
     event.array[0] = get_tracker_event_uint(reader, 16)?; // m_targetUnitFlags
     event.array[1] = get_tracker_event_uint(reader, 8)?; // m_timer

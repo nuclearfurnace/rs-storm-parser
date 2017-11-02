@@ -2,8 +2,6 @@ use std::error::Error;
 use std::fmt;
 use std::io;
 
-use backtrace::Backtrace;
-
 #[derive(Primitive, Serialize, Copy, Clone, Debug)]
 pub enum GameSpeed {
     Unknown = 0,
@@ -59,6 +57,30 @@ pub enum PlayerType {
 
 impl Default for PlayerType {
     fn default() -> PlayerType { PlayerType::Computer }
+}
+
+#[derive(Primitive, Serialize, Copy, Clone, PartialEq, Debug)]
+pub enum ReplayTrackerEventType {
+    Unknown = 0,
+    UnitBornEvent = 1,
+    UnitDiedEvent = 2,
+    UnitOwnerChangeEvent = 3,
+    UnitTypeChangeEvent = 4,
+    UpgradeEvent = 5,
+    UnitInitEvent = 6,
+    UnitDoneEvent = 7,
+    UnitPositionsEvent = 8,
+    PlayerSetupEvent = 9,
+    StatGameEvent = 10,
+    ScoreResultEvent = 11,
+    UnitRevivedEvent = 12,
+    HeroBannedEvent = 13,
+    HeroPickedEvent = 14,
+    HeroSwappedEvent = 15
+}
+
+impl Default for ReplayTrackerEventType {
+    fn default() -> ReplayTrackerEventType { ReplayTrackerEventType::Unknown }
 }
 
 #[derive(Primitive, Serialize, Copy, Clone, Debug)]

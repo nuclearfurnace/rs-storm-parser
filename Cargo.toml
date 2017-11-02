@@ -19,7 +19,7 @@ backtrace = "0.3.3"
 byteorder = "1.1.0"
 chrono = { version = "0.4.0", features = ["serde", "rustc-serialize"] }
 derivative = "1.0.0"
-enum-primitive-derive = { path = "../enum-primitive-derive" }
+enum-primitive-derive = { git = "https://gitlab.com/toby6/enum-primitive-derive" }
 hex-slice = "0.1.0"
 lazysort = "0.1.1"
 mpq = { git = "https://github.com/nuclearfurnace/mpq-rust", branch = "tobz/read-user-data" }

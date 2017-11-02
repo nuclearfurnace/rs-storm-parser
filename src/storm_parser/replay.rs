@@ -3,7 +3,7 @@ use mpq::Archive;
 use serde_json;
 
 use storm_parser::binary_reader::BinaryReader;
-use storm_parser::tracker::TrackerEvent;
+use storm_parser::tracker::{TrackerEventStructure, TrackerEvent};
 use storm_parser::details::ReplayDetails;
 use storm_parser::init::ReplayInit;
 use storm_parser::attributes::ReplayAttributes;
@@ -32,7 +32,8 @@ pub struct StormReplay {
     pub team_size: TeamSize,
     pub bans: DraftBans,
 
-    pub events: Vec<GameEvent>,
+    pub game_events: Vec<GameEvent>,
+    pub tracker_events: Vec<TrackerEvent>,
 }
 
 impl StormReplay {
@@ -53,7 +54,7 @@ impl StormReplay {
             Ok(result) => match result {
                 Some(data) => {
                     let mut reader = BinaryReader::new(&data);
-                    match TrackerEvent::new(&mut reader) {
+                    match TrackerEventStructure::new(&mut reader) {
                         Ok(event) => {
                             let version_string = format!("{}.{}.{}.{}",
                                 event.get_dict_entry(1).get_dict_entry(0).get_vint(),

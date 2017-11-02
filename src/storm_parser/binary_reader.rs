@@ -1,4 +1,3 @@
-use std::fmt;
 use std::io::{Cursor, Error, ErrorKind, Read, Seek, SeekFrom};
 
 pub struct BinaryReader<'a> {
@@ -60,7 +59,7 @@ impl<'a> BinaryReader<'a> {
     }
 
     pub fn skip_bytes(&mut self, count: u64) -> Result<u64, Error> {
-        self.pos += (count * 8);
+        self.pos += count * 8;
         self.inner.seek(SeekFrom::Current(count as i64))
     }
 
