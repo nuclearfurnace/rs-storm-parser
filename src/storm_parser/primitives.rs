@@ -4,7 +4,7 @@ use std::io;
 
 use backtrace::Backtrace;
 
-#[derive(Primitive, Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Primitive, Serialize, Copy, Clone, Debug)]
 pub enum GameSpeed {
     Unknown = 0,
     Slower = 1,
@@ -31,7 +31,7 @@ impl GameSpeed {
     }
 }
 
-#[derive(SignedPrimitive, Serialize, Deserialize, Copy, Clone, PartialEq, Debug)]
+#[derive(SignedPrimitive, Serialize, Copy, Clone, PartialEq, Debug)]
 pub enum GameMode {
     Unknown = -9,
     Event = -2,
@@ -50,7 +50,7 @@ impl Default for GameMode {
     fn default() -> GameMode { GameMode::Unknown }
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Serialize, Copy, Clone, Debug)]
 pub enum PlayerType {
     Human,
     Computer,
@@ -61,7 +61,7 @@ impl Default for PlayerType {
     fn default() -> PlayerType { PlayerType::Computer }
 }
 
-#[derive(Primitive, Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Primitive, Serialize, Copy, Clone, Debug)]
 pub enum ReplayAttributeEventType
 {
     Unknown = 0,
@@ -93,7 +93,7 @@ pub enum ReplayAttributeEventType
     /* 4100 - 4200 are related to Artifacts, no longer in the game */
 }
 
-#[derive(Primitive, Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Primitive, Serialize, Copy, Clone, Debug)]
 pub enum ReplayGameEventType
 {
     Unknown = 0,
@@ -148,7 +148,7 @@ impl Default for ReplayGameEventType {
     fn default() -> ReplayGameEventType { ReplayGameEventType::Unknown }
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Serialize, Copy, Clone, Debug)]
 pub enum Difficulty {
     Beginner,
     Recruit,
@@ -174,7 +174,7 @@ impl Difficulty {
     }
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Serialize, Copy, Clone, Debug)]
 pub enum TeamSize {
     OneVsOne,
     TwoVsTwo,
@@ -202,7 +202,7 @@ impl TeamSize {
     }
 }
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Default, Debug)]
 pub struct DraftBans {
     pub team_one_first_ban: String,
     pub team_one_second_ban: String,
@@ -210,7 +210,7 @@ pub struct DraftBans {
     pub team_two_second_ban: String,
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Default)]
+#[derive(Serialize, Copy, Clone, Default)]
 pub struct Point {
     pub x: i32,
     pub y: i32
@@ -222,7 +222,7 @@ pub type ReplayResult<T> = Result<T, ReplayError>;
 pub struct ReplayError {
     pub kind: ReplayErrorKind,
     pub msg: String,
-    pub backtrace: Backtrace
+    //pub backtrace: Backtrace
 }
 
 #[derive(Debug, Clone)]
@@ -237,7 +237,7 @@ pub enum ReplayErrorKind {
 
 impl ReplayError {
     pub fn new(kind: ReplayErrorKind, msg: &str) -> ReplayError {
-        ReplayError { kind: kind, msg: msg.to_string(), backtrace: Backtrace::new() }
+        ReplayError { kind: kind, msg: msg.to_string() /*, backtrace: Backtrace::new() */ }
     }
 }
 
@@ -256,7 +256,8 @@ impl Error for ReplayError {
 
 impl fmt::Display for ReplayError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}: {}\n{:?}", self.description(), self.msg, self.backtrace)
+        //write!(f, "{}: {}\n{:?}", self.description(), self.msg, self.backtrace)
+        write!(f, "{}: {}", self.description(), self.msg)
     }
 }
 
@@ -266,7 +267,7 @@ impl From<io::Error> for ReplayError {
     }
 }
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Default, Debug)]
 pub struct Player {
     pub name: String,
     pub player_type: PlayerType,

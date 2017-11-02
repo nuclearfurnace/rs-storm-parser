@@ -4,16 +4,24 @@ use std::collections::HashMap;
 use storm_parser::binary_reader::BinaryReader;
 use storm_parser::primitives::*;
 
-#[derive(Debug, Default)]
-pub(crate) struct TrackerEvent {
+#[derive(Serialize, Clone, Debug, Default)]
+pub struct TrackerEvent {
     pub(crate) data_type: u32,
-    pub(crate) array: Option<Vec<TrackerEvent>>,
-    pub(crate) dictionary: Option<HashMap<i32, TrackerEvent>>,
+    #[serde(skip_serializing_if = "is_vec_empty")]
+    pub(crate) array: Vec<TrackerEvent>,
+    #[serde(skip_serializing_if = "is_map_empty")]
+    pub(crate) dictionary: HashMap<i32, TrackerEvent>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) blob: Option<Vec<u8>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) choice_flag: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) choice_data: Option<Box<TrackerEvent>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) optional_data: Option<Box<TrackerEvent>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) unsigned_int: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) variable_int: Option<i64>,
 }
 
@@ -31,7 +39,7 @@ impl TrackerEvent {
                     array.push(event);
                 }
 
-                event.array = Some(array);
+                event.array = array;
             },
             0x01 => panic!("unsupported tracker event type"),
             0x02 => {
@@ -66,7 +74,7 @@ impl TrackerEvent {
                     dictionary.insert(key, value);
                 }
 
-                event.dictionary = Some(dictionary);
+                event.dictionary = dictionary;
             },
             0x06 => {
                 event.unsigned_int = Some(r.read_u8()? as u64);
@@ -87,15 +95,15 @@ impl TrackerEvent {
     }
 
     pub fn get_array(&self) -> &Vec<TrackerEvent> {
-        self.array.as_ref().unwrap()
+        &self.array
     }
 
     pub fn get_dict(&self) -> &HashMap<i32, TrackerEvent> {
-        self.dictionary.as_ref().unwrap()
+        &self.dictionary
     }
 
     pub fn get_dict_entry(&self, index: i32) -> &TrackerEvent {
-        self.get_dict().get(&index).unwrap()
+        self.dictionary.get(&index).unwrap()
     }
 
     pub fn get_blob(&self) -> &Vec<u8> {
@@ -147,4 +155,12 @@ impl TrackerEvent {
             Ok(x >> 1)
         }
     }
+}
+
+fn is_vec_empty(v: &Vec<TrackerEvent>) -> bool {
+    v.len() == 0
+}
+
+fn is_map_empty(m: &HashMap<i32, TrackerEvent>) -> bool {
+    m.len() == 0
 }

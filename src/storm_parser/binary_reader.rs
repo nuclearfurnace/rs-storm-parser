@@ -1,18 +1,28 @@
+use std::fmt;
 use std::io::{Cursor, Error, ErrorKind, Read, Seek, SeekFrom};
 
 pub struct BinaryReader<'a> {
     inner: Cursor<&'a Vec<u8>>,
-    pos: u32,
+    len: u64,
+    pos: u64,
     val: u8,
 }
 
 impl<'a> BinaryReader<'a> {
     pub fn new(buf: &'a Vec<u8>) -> BinaryReader<'a> {
-        BinaryReader{ inner: Cursor::new(buf), pos: 0, val: 0 }
+        BinaryReader{ inner: Cursor::new(buf), len: buf.len() as u64, pos: 0, val: 0 }
     }
 
-    pub fn position(&mut self) -> u64 {
+    pub fn position(&self) -> u64 {
         self.inner.position()
+    }
+
+    pub fn pos_str(&self) {
+        println!("pos={} position={} len={} (pos diff: {})", self.pos, self.position(), self.len, (self.position() - (self.pos / 8)));
+    }
+
+    pub fn eof(&self) -> bool {
+        (self.pos >> 3) == self.len
     }
 
     pub fn read(&mut self, mut bits: u32) -> Result<u64, Error> {
@@ -27,12 +37,12 @@ impl<'a> BinaryReader<'a> {
                 self.val = val_buf[0];
             }
 
-            let read_bits = if val_rem_bits > bits { bits } else { val_rem_bits };
+            let read_bits = if val_rem_bits > bits as u64 { bits } else { val_rem_bits as u32};
             let shifted_val = self.val as u32 >> val_pos;
             let read_mask = (1u32 << read_bits) - 1;
             value <<= read_bits;
             value |= (shifted_val & read_mask) as u64;
-            self.pos += read_bits;
+            self.pos += read_bits as u64;
             bits -= read_bits;
         }
 
@@ -45,11 +55,12 @@ impl<'a> BinaryReader<'a> {
 
     pub fn align(&mut self) {
         if (self.pos % 8) > 0 {
-            self.pos = (self.pos & 0x7ffffff8) + 8;
+            self.pos = (self.pos & (u64::max_value() << 3)) + 8;
         }
     }
 
     pub fn skip_bytes(&mut self, count: u64) -> Result<u64, Error> {
+        self.pos += (count * 8);
         self.inner.seek(SeekFrom::Current(count as i64))
     }
 
@@ -99,6 +110,7 @@ impl<'a> BinaryReader<'a> {
         let buf_len = buf.len();
         if self.is_aligned() {
             self.inner.read_exact(buf)?;
+            self.pos += (buf.len() * 8) as u64;
         } else {
             for i in 0..buf_len {
                 buf[i] = self.read_u8()?;

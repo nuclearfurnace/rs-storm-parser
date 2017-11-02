@@ -1,3 +1,6 @@
+#![feature(alloc_system)]
+extern crate alloc_system;
+
 extern crate backtrace;
 extern crate byteorder;
 extern crate chrono;

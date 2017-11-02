@@ -7,10 +7,10 @@ use storm_parser::tracker::TrackerEvent;
 use storm_parser::details::ReplayDetails;
 use storm_parser::init::ReplayInit;
 use storm_parser::attributes::ReplayAttributes;
-use storm_parser::events::ReplayGameEvents;
+use storm_parser::events::{GameEvent, ReplayGameEvents};
 use storm_parser::primitives::*;
 
-#[derive(Derivative, Serialize, Deserialize)]
+#[derive(Derivative, Serialize)]
 #[derivative(Default)]
 pub struct StormReplay {
     // High-level attributes of the self.
@@ -31,6 +31,8 @@ pub struct StormReplay {
     pub players: Vec<Player>,
     pub team_size: TeamSize,
     pub bans: DraftBans,
+
+    pub events: Vec<GameEvent>,
 }
 
 impl StormReplay {
