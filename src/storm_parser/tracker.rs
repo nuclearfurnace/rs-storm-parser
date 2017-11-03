@@ -1,4 +1,5 @@
 use std::io;
+use std::borrow::BorrowMut;
 use std::collections::HashMap;
 
 use mpq::Archive;
@@ -102,12 +103,20 @@ impl TrackerEventStructure {
         &self.array
     }
 
+    pub fn get_mut_array(&mut self) -> &mut Vec<TrackerEventStructure> {
+        self.array.as_mut()
+    }
+
     pub fn get_dict(&self) -> &HashMap<i32, TrackerEventStructure> {
         &self.dictionary
     }
 
     pub fn get_dict_entry(&self, index: i32) -> &TrackerEventStructure {
         self.dictionary.get(&index).unwrap()
+    }
+
+    pub fn get_mut_dict_entry(&mut self, index: i32) -> &mut TrackerEventStructure {
+        self.dictionary.get_mut(&index).unwrap()
     }
 
     pub fn get_blob(&self) -> &Vec<u8> {
@@ -128,6 +137,10 @@ impl TrackerEventStructure {
 
     pub fn get_optional_data(&self) -> &TrackerEventStructure {
         self.optional_data.as_ref().unwrap().as_ref()
+    }
+
+    pub fn get_mut_optional_data(&mut self) -> &mut TrackerEventStructure {
+        self.optional_data.as_mut().unwrap().borrow_mut()
     }
 
     pub fn get_uint(&self) -> u64 {
@@ -199,13 +212,15 @@ impl ReplayTrackerEvents {
                                 .ok_or(ReplayError::new(ReplayErrorKind::StructureError, "unknown tracker event type"))?;
                             tracker_event.event_type = tracker_event_type;
 
-                            let tracker_data = TrackerEventStructure::new(&mut reader)?;
-                            if tracker_event_type == ReplayTrackerEventType::StatGameEvent &&
-                                tracker_data.get_dict_entry(3).optional_data.is_some() {
-                                let mut optional_data = tracker_data.get_dict_entry(3).get_optional_data().get_array();
-                                for item in optional_data {
-                                    let item_vint_value = item.get_dict_entry(1).get_vint();
-                                    item.get_dict_entry(1).variable_int = Some(item_vint_value / 4096);
+                            let mut tracker_data = TrackerEventStructure::new(&mut reader)?;
+                            if tracker_event_type == ReplayTrackerEventType::StatGameEvent {
+                                let fixed_data = tracker_data.get_mut_dict_entry(3);
+                                if fixed_data.optional_data.is_some() {
+                                    let items = fixed_data.get_mut_optional_data().get_mut_array();
+                                    for item in items.iter_mut() {
+                                        let entry = item.get_mut_dict_entry(1);
+                                        entry.variable_int = Some(entry.get_vint() / 4096);
+                                    }
                                 }
                             }
 
