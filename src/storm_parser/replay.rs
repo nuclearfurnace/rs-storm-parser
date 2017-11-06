@@ -3,7 +3,7 @@ use mpq::Archive;
 use serde_json;
 
 use storm_parser::binary_reader::BinaryReader;
-use storm_parser::tracker::{TrackerEventStructure, TrackerEvent};
+use storm_parser::tracker::{TrackerEventStructure, TrackerEvent, ReplayTrackerEvents};
 use storm_parser::details::ReplayDetails;
 use storm_parser::init::ReplayInit;
 use storm_parser::attributes::ReplayAttributes;
@@ -45,6 +45,7 @@ impl StormReplay {
         replay.parse_replay_init(archive)?;
         replay.parse_replay_attributes(archive)?;
         replay.parse_replay_game_events(archive)?;
+        replay.parse_replay_tracker_events(archive)?;
 
         Ok(replay)
     }
@@ -107,6 +108,10 @@ impl StormReplay {
 
     fn parse_replay_game_events(&mut self, archive: &mut Archive) -> ReplayResult<()> {
         ReplayGameEvents::parse_replay_game_events(self, archive)
+    }
+
+    fn parse_replay_tracker_events(&mut self, archive: &mut Archive) -> ReplayResult<()> {
+        ReplayTrackerEvents::parse_replay_tracker_events(self, archive)
     }
 
     pub fn get_player_by_index(&mut self, index: u32) -> Option<&mut Player> {
