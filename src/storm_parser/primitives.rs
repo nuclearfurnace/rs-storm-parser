@@ -254,7 +254,8 @@ pub enum ReplayErrorKind {
     IntegrityError,
     ReaderError,
     StructureError,
-    OutputError
+    OutputError,
+    Other
 }
 
 impl ReplayError {
@@ -271,7 +272,8 @@ impl Error for ReplayError {
             ReplayErrorKind::IntegrityError => "integrity error",
             ReplayErrorKind::ReaderError => "error while reading replay",
             ReplayErrorKind::StructureError => "structure error",
-            ReplayErrorKind::OutputError => "output error"
+            ReplayErrorKind::OutputError => "output error",
+            ReplayErrorKind::Other => "error"
         }
     }
 }

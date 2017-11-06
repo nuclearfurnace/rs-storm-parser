@@ -7,6 +7,7 @@ extern crate chrono;
 #[macro_use]
 extern crate enum_primitive_derive;
 extern crate hex_slice;
+extern crate md5;
 extern crate mpq;
 extern crate num_traits;
 extern crate lazysort;
@@ -20,6 +21,7 @@ extern crate serde_derive;
 extern crate derivative;
 
 extern crate unicode_reverse;
+extern crate uuid;
 
 mod storm_parser;
 pub use storm_parser::StormParser;

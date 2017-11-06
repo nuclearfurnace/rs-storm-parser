@@ -1,6 +1,10 @@
+use std::fmt::Write;
+
+use md5;
 use chrono::prelude::*;
 use mpq::Archive;
 use serde_json;
+use uuid::Uuid;
 
 use storm_parser::binary_reader::BinaryReader;
 use storm_parser::tracker::{TrackerEventStructure, TrackerEvent, ReplayTrackerEvents};
@@ -37,7 +41,7 @@ pub struct StormReplay {
 }
 
 impl StormReplay {
-    pub fn new(archive: &mut Archive) -> ReplayResult<StormReplay> {
+    pub fn parse(archive: &mut Archive) -> ReplayResult<StormReplay> {
         let mut replay: StormReplay = Default::default();
 
         replay.parse_replay_metadata(archive)?;
@@ -48,6 +52,29 @@ impl StormReplay {
         replay.parse_replay_tracker_events(archive)?;
 
         Ok(replay)
+    }
+
+    pub fn validate(archive: &mut Archive) -> ReplayResult<String> {
+        let mut replay: StormReplay = Default::default();
+
+        replay.parse_replay_metadata(archive)?;
+        replay.parse_replay_details(archive)?;
+        replay.parse_replay_init(archive)?;
+
+        // We'll build a UUID from sha128(sorted player names + replay version + random value)
+        let mut signature = String::new();
+        let mut player_names: Vec<String> = replay.players.iter().map(|p| p.name.clone()).collect();
+        player_names.sort();
+        for name in &player_names {
+            write!(&mut signature, "{}", name);
+        }
+        write!(&mut signature, "{}", replay.replay_version);
+        write!(&mut signature, "{}", replay.random_value);
+
+        let hash = md5::compute(signature.as_bytes());
+        Uuid::from_bytes(&hash[0..16])
+            .map(|uuid| uuid.hyphenated().to_string())
+            .map_err(|_| ReplayError::new(ReplayErrorKind::Other, "failed to generate signature for replay"))
     }
 
     fn parse_replay_metadata(&mut self, archive: &mut Archive) -> ReplayResult<()> {
