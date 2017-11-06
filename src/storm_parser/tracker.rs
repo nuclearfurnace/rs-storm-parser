@@ -207,9 +207,12 @@ impl ReplayTrackerEvents {
                             ticks_elapsed += ticks_delta as u32;
                             tracker_event.ticks_elapsed = ticks_elapsed;
 
+                            reader.read_bytes(1)?;
+
                             let tracker_event_type_raw = read_variable_int(&mut reader)?;
                             let tracker_event_type = ReplayTrackerEventType::from_u32(tracker_event_type_raw as u32)
-                                .ok_or(ReplayError::new(ReplayErrorKind::StructureError, "unknown tracker event type"))?;
+                                .ok_or(ReplayError::new(ReplayErrorKind::StructureError,
+                                    &format!("unknown tracker event type '{}'", tracker_event_type_raw)))?;
                             tracker_event.event_type = tracker_event_type;
 
                             let mut tracker_data = TrackerEventStructure::new(&mut reader)?;

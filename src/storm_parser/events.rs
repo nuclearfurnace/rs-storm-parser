@@ -52,7 +52,8 @@ impl ReplayGameEvents {
 
                             let event_type_raw = reader.read_vu32(7)?;
                             let event_type = ReplayGameEventType::from_u32(event_type_raw)
-                                .ok_or(ReplayError::new(ReplayErrorKind::StructureError, "unknown game event type"))?;
+                                .ok_or(ReplayError::new(ReplayErrorKind::StructureError,
+                                    &format!("unknown game event type '{}'", event_type_raw)))?;
                             game_event.event_type = event_type;
 
                             game_event.data = match event_type {
